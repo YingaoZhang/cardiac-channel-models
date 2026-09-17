@@ -1,0 +1,70 @@
+{
+  "channel": "nav1.5",
+  "model": "xgboost",
+  "task_models": {
+    "classification": "classification.ubj",
+    "regression": "regression.ubj"
+  },
+  "training_rows": 4585,
+  "class_counts": {
+    "non_blocker": 1635,
+    "blocker": 2950
+  },
+  "label_mapping": {
+    "Non-blocker": 0,
+    "Blocker": 1
+  },
+  "blocker_pic50_cutoff": 5.0,
+  "features": {
+    "morgan_radius": 2,
+    "morgan_bits": 2048,
+    "maccs_bits": 167,
+    "rdkit_descriptors": [
+      "MolWt",
+      "MolLogP",
+      "MolMR",
+      "TPSA",
+      "HBD",
+      "HBA",
+      "RotatableBonds",
+      "RingCount",
+      "AromaticRings",
+      "AliphaticRings",
+      "FractionCSP3",
+      "HeavyAtomCount",
+      "HeteroAtomCount",
+      "FormalCharge",
+      "NHOHCount",
+      "NOCount",
+      "LabuteASA",
+      "QED"
+    ],
+    "total_dimension": 2233
+  },
+  "training_data_sha256": "5a6b9d3d1f4694ba4a6f11ddf8af57afcf8fd819fb62712cf086ed1529d6bfab",
+  "versions": {
+    "python": "3.12.10",
+    "rdkit": "2026.03.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1"
+  },
+  "hyperparameters": {
+    "n_estimators": 300,
+    "max_depth": 6,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 2,
+    "reg_lambda": 1.0,
+    "tree_method": "hist",
+    "n_jobs": -1,
+    "random_state": 42
+  },
+  "holdout_metrics": {
+    "split": "random stratified 80/20, seed=42; smoke-test baseline only",
+    "classification_roc_auc": 0.9527600684185975,
+    "regression_r2": 0.8799549341201782,
+    "regression_rmse": 0.3682449413879242,
+    "regression_mae": 0.24266240000724792
+  }
+}

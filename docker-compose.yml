@@ -1,0 +1,20 @@
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: herg-pgvector
+    environment:
+      POSTGRES_DB: herg_rag
+      POSTGRES_USER: herg
+      POSTGRES_PASSWORD: herg
+    ports:
+      - "5432:5432"
+    volumes:
+      - herg_pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U herg -d herg_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  herg_pgvector_data:

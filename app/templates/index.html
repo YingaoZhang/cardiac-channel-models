@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 药物发现多智能体平台</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="container">
+    <h1>AI 药物发现多智能体平台</h1>
+    <p class="subtitle">
+        输入 SMILES 后，系统会调用 hERG 毒性工具，并结合结构相似案例与本地知识库内容进行检索增强。
+    </p>
+
+    <section class="card">
+        <label for="smilesInput">分子 SMILES</label>
+        <textarea id="smilesInput" rows="4" placeholder="请输入 SMILES，例如：CCN(CC)CCOC(=O)c1ccc(N)cc1"></textarea>
+
+        <button id="submitBtn" onclick="runDiscovery()">开始分析</button>
+
+        <div id="loading" class="loading hidden">正在分析，请稍候...</div>
+        <div id="errorBox" class="error hidden"></div>
+    </section>
+
+    <section id="resultBox" class="card hidden">
+        <h2>分析结果</h2>
+
+        <div class="grid">
+            <div class="item">
+                <span class="label">原始 hERG 毒性概率</span>
+                <span id="toxicityProb" class="value">-</span>
+            </div>
+
+            <div class="item">
+                <span class="label">原始风险等级</span>
+                <span id="riskLevel" class="value">-</span>
+            </div>
+
+            <div class="item">
+                <span class="label">毒性来源</span>
+                <span id="toxicitySource" class="value">-</span>
+            </div>
+
+            <div class="item">
+                <span class="label">优化后 hERG 概率</span>
+                <span id="modifiedToxicityProb" class="value">-</span>
+            </div>
+
+            <div class="item">
+                <span class="label">SA Score</span>
+                <span id="saScore" class="value">-</span>
+            </div>
+        </div>
+
+        <h3>原始分子</h3>
+        <pre id="originalSmiles"></pre>
+
+        <h3>优化后分子</h3>
+        <pre id="modifiedSmiles"></pre>
+
+        <h3>优化说明</h3>
+        <pre id="optimizationHistory"></pre>
+
+        <h3>RAG 检索证据</h3>
+        <pre id="ragContext"></pre>
+
+        <h3>最终报告</h3>
+        <pre id="finalReport"></pre>
+    </section>
+</main>
+
+<script>
+async function runDiscovery() {
+    const smiles = document.getElementById("smilesInput").value.trim();
+    const submitBtn = document.getElementById("submitBtn");
+    const loading = document.getElementById("loading");
+    const errorBox = document.getElementById("errorBox");
+    const resultBox = document.getElementById("resultBox");
+
+    errorBox.classList.add("hidden");
+    resultBox.classList.add("hidden");
+
+    if (!smiles) {
+        errorBox.textContent = "请输入 SMILES。";
+        errorBox.classList.remove("hidden");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    loading.classList.remove("hidden");
+
+    try {
+        const response = await fetch("/discover", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ smiles })
+        });
+
+        if (!response.ok) {
+            throw new Error("请求失败，状态码：" + response.status);
+        }
+
+        const data = await response.json();
+
+        document.getElementById("toxicityProb").textContent = formatValue(data.toxicity_prob);
+        document.getElementById("riskLevel").textContent = formatValue(data.risk_level);
+        document.getElementById("toxicitySource").textContent = formatValue(data.toxicity_source);
+        document.getElementById("modifiedToxicityProb").textContent = formatValue(data.modified_toxicity_prob);
+        document.getElementById("saScore").textContent = formatValue(data.sa_score);
+
+        document.getElementById("originalSmiles").textContent = data.original_smiles || "-";
+        document.getElementById("modifiedSmiles").textContent = data.modified_smiles || data.original_smiles || "-";
+
+        if (data.optimization_history && data.optimization_history.length > 0) {
+            document.getElementById("optimizationHistory").textContent = data.optimization_history.join("\n\n");
+        } else {
+            document.getElementById("optimizationHistory").textContent = "未进行结构优化。";
+        }
+
+        document.getElementById("ragContext").textContent = formatRag(data.rag_context);
+        document.getElementById("finalReport").textContent = data.final_report || "-";
+
+        resultBox.classList.remove("hidden");
+    } catch (error) {
+        errorBox.textContent = "分析失败：" + error.message;
+        errorBox.classList.remove("hidden");
+    } finally {
+        submitBtn.disabled = false;
+        loading.classList.add("hidden");
+    }
+}
+
+function formatValue(value) {
+    if (value === undefined || value === null) {
+        return "-";
+    }
+    return value;
+}
+
+function formatRag(items) {
+    if (!items || items.length === 0) {
+        return "未检索到本地 RAG 证据。";
+    }
+
+    return items.map((item, index) => {
+        if (item.kind === "structure_case") {
+            return `${index + 1}. [结构案例] score=${item.score}, label=${item.label}, risk=${item.risk}\n${item.smiles}`;
+        }
+        return `${index + 1}. [知识片段] score=${item.score}, source=${item.source}#${item.chunk_index}\n${item.text}`;
+    }).join("\n\n");
+}
+</script>
+</body>
+</html>

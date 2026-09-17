@@ -1,0 +1,16 @@
+{
+  "source": "ChEMBL REST API",
+  "chembl_version": "ChEMBL_37",
+  "release_date": "2026-05-01",
+  "target": "CHEMBL240 (KCNH2/hERG)",
+  "filters": {
+    "standard_type": "IC50",
+    "standard_relation": "=",
+    "standard_units": "nM",
+    "invalid_measurements_excluded": true
+  },
+  "aggregation": "canonical InChIKey; median IC50 for repeated measurements",
+  "raw_activity_count": 12010,
+  "unique_compound_count": 9628,
+  "download_query": "https://www.ebi.ac.uk/chembl/api/data/activity.json?target_chembl_id=CHEMBL240&standard_type=IC50&standard_relation=%3D&standard_units=nM&limit=1000"
+}
